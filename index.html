@@ -9,24 +9,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#fafbfe; --ink:#0f1222; --muted:#6a7086; --card:#ffffff; --border:#e6e9f2; --accent:#2b59ff;
+      --ink:#e8ecff; --muted:#a9b1d6; --panel:#0c1226; --border:#1a2244; --accent:#7aa2ff;
+      --bg1:#060a1a; --bg2:#0a1030;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; background:var(--bg); color:var(--ink);
+      margin:0; color:var(--ink);
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       line-height:1.55;
+      /* Geometric NYC-esque background: deep night gradient + faint grid + diagonal subway “lines” */
+      background:
+        /* soft colored “city lights” blobs */
+        radial-gradient(1000px 700px at 12% 8%, rgba(122,162,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 85% 20%, rgba(255,204,10,.10), transparent 60%),
+        radial-gradient(800px 600px at 70% 85%, rgba(238,53,46,.10), transparent 60%),
+        /* diagonal subway lines */
+        linear-gradient(135deg, rgba(238,53,46,.28) 1px, transparent 1px) 0 0/ 18px 18px,
+        linear-gradient(135deg, rgba(0,147,60,.24) 1px, transparent 1px) 6px 0/ 18px 18px,
+        linear-gradient(135deg, rgba(0,57,166,.20) 1px, transparent 1px) 12px 0/ 18px 18px,
+        /* subtle isometric grid */
+        repeating-linear-gradient(0deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 24px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 24px),
+        linear-gradient(180deg, var(--bg1), var(--bg2) 60%, #070d24);
     }
-    .wrap{max-width:880px;margin:48px auto;padding:0 20px}
+    .wrap{max-width:900px;margin:48px auto;padding:0 20px}
     header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}
-    h1{margin:0; font-weight:800; letter-spacing:.2px; font-size:1.8rem}
+    h1{margin:0; font-weight:800; letter-spacing:.2px; font-size:1.9rem}
     .tag{color:var(--muted); font-size:.95rem}
     .panel{
-      background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px;
-      box-shadow:0 8px 30px rgba(23,27,59,.06);
+      background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:18px;
+      box-shadow:0 15px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
     }
-    fieldset{border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin:0}
+    fieldset{border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin:0; background:rgba(255,255,255,.02)}
     legend{font-size:.9rem;color:var(--muted); padding:0 .4rem}
     .boroughs{display:flex; gap:16px; flex-wrap:wrap; padding:6px 2px}
     label{display:inline-flex; gap:.5rem; align-items:center; cursor:pointer; user-select:none}
@@ -34,14 +49,15 @@
     .controls{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:14px}
     button{
       font-weight:700; padding:.7rem 1.1rem; border-radius:12px; border:1px solid var(--border);
-      background:linear-gradient(180deg,#f4f6ff,#e8edff); color:#0b1a64; cursor:pointer;
+      background:linear-gradient(180deg,#1b2350,#17204a); color:#fff; cursor:pointer;
     }
-    button:hover{filter:brightness(1.02)}
+    button:hover{filter:brightness(1.07)}
     .status{color:var(--muted)}
-    .notice{color:#c41e3a; font-weight:600}
+    .notice{color:#ff8e8e; font-weight:600}
     .result{margin-top:18px}
     .card{
-      background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 18px;
+      background:rgba(12,18,38,.75); border:1px solid var(--border); border-radius:16px; padding:16px 18px;
+      backdrop-filter: blur(3px);
     }
     .name{font-size:1.35rem;font-weight:800;letter-spacing:.2px;margin:.3rem 0 .1rem}
     .row{display:flex; gap:18px; align-items:center; flex-wrap:wrap}
@@ -50,11 +66,13 @@
     .lines{display:flex; gap:8px; flex-wrap:wrap}
     .dot{
       width:28px;height:28px;border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
-      font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.15);
+      font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.35);
       font-size:.95rem;
     }
     .count{color:var(--accent);font-weight:700}
     footer{margin-top:10px; color:var(--muted); font-size:.9rem}
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -94,7 +112,7 @@
     </section>
   </div>
 
-  <!-- Robust CSV parser -->
+  <!-- Papa Parse for CSV -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
@@ -118,47 +136,58 @@
     'S':'#808183','SIR':'#0039A6'
   };
 
-  // tiny fallback in case CSV is missing
+  // fallback tiny set if CSV missing
   const FALLBACK = [
-    { complex_name: 'Times Sq - 42 St', borough: 'Manhattan', services: '1 2 3 7 N Q R W S' },
-    { complex_name: 'Atlantic Av - Barclays Ctr', borough: 'Brooklyn', services: 'B Q 2 3 4 5 D N R' },
-    { complex_name: 'Flushing - Main St', borough: 'Queens', services: '7' },
-    { complex_name: '149 St - Grand Concourse', borough: 'Bronx', services: '2 5' },
-    { complex_name: 'St George', borough: 'Staten Island', services: 'SIR' }
+    { name: 'Times Sq - 42 St', borough: 'Manhattan', services: '1 2 3 7 N Q R W S' },
+    { name: 'Atlantic Av - Barclays Ctr', borough: 'Brooklyn', services: 'B Q 2 3 4 5 D N R' },
+    { name: 'Flushing - Main St', borough: 'Queens', services: '7' },
+    { name: '149 St - Grand Concourse', borough: 'Bronx', services: '2 5' },
+    { name: 'St George', borough: 'Staten Island', services: 'SIR' }
   ];
 
   let stations = [];
 
-  // Try to find a column by any of several likely names (case-insensitive)
+  // Helpers to read columns with flexible names (case-insensitive, spaces OK)
   function getField(row, candidates){
-    for (const key of Object.keys(row)){
-      const k = key.trim().toLowerCase();
+    const keys = Object.keys(row);
+    for (const key of keys){
+      const norm = key.trim().toLowerCase();
       for (const c of candidates){
-        if (k === c) return row[key];
+        if (norm === c) return row[key];
       }
     }
     return undefined;
   }
 
+  // Adapted for your CSV headers:
+  // - Name: "Display Name" or "Stop Name" (fallbacks included)
+  // - Borough: letters like M/B/Q/X/S
+  // - Services: "Daytime Routes"
+  // - Coordinates: "Latitude", "Longitude"
   function normName(row){
-    return getField(row, ['complex_name','complex','complexname']) ||
-           getField(row, ['station_name','stop_name','name','station']);
+    return getField(row, [
+      'display name','stop name','station name','complex name','stations in complex'
+    ]);
   }
-
   function normBorough(row){
-    return getField(row, ['borough','boro']);
+    const raw = getField(row, ['borough','boro']);
+    if (!raw) return undefined;
+    const x = String(raw).trim().toUpperCase();
+    if (x === 'M' || x === 'MANHATTAN') return 'Manhattan';
+    if (x === 'B' || x === 'BK' || x === 'BROOKLYN') return 'Brooklyn';
+    if (x === 'Q' || x === 'QUEENS') return 'Queens';
+    if (x === 'X' || x === 'BX' || x === 'BRONX') return 'Bronx';
+    if (x === 'S' || x === 'SI' || x === 'STATEN ISLAND') return 'Staten Island';
+    return raw; // already full name
   }
-
   function normServices(row){
-    return getField(row, ['services','lines','route','routes','transfers']);
+    return getField(row, ['daytime routes','services','lines','routes','transfers']);
   }
-
   function normLat(row){
-    return getField(row, ['latitude','lat','gtfs_latitude','y']);
+    return getField(row, ['latitude','gtfs latitude','gtfs_latitude','y']);
   }
-
   function normLon(row){
-    return getField(row, ['longitude','lon','long','gtfs_longitude','x']);
+    return getField(row, ['longitude','gtfs longitude','gtfs_longitude','x']);
   }
 
   function splitLines(s){
@@ -175,32 +204,27 @@
   }
 
   function renderStation(s){
-    const name = s.name || 'Unknown';
-    const borough = s.borough || '—';
     const lines = splitLines(s.services);
-
     resultEl.classList.remove('status');
     resultEl.innerHTML = `
       <div class="row">
         <div class="group">
           <div class="label">Borough</div>
-          <div><strong>${borough}</strong></div>
+          <div><strong>${s.borough}</strong></div>
         </div>
         <div class="group">
           <div class="label">Lines</div>
           <div class="lines">${lines.length ? lines.map(dotHTML).join('') : '<span class="label">—</span>'}</div>
         </div>
       </div>
-      <div class="name">${name}</div>
+      <div class="name">${s.name}</div>
     `;
   }
 
   function selectedBoroughs(){
     return [...document.querySelectorAll('input[name="borough"]:checked')].map(cb => cb.value);
   }
-
   function pickRandom(list){ return list[Math.floor(Math.random() * list.length)]; }
-
   function pickAndShow(){
     if (!stations.length){ return; }
     const sel = selectedBoroughs();
@@ -212,44 +236,41 @@
     }
     renderStation(pickRandom(pool));
   }
-
   btn.addEventListener('click', pickAndShow);
 
-  function mapRow(row){
-    const name = normName(row);
-    const borough = normBorough(row);
-    const services = normServices(row);
-    const lat = normLat(row);
-    const lon = normLon(row);
-    return (name && borough) ? { name, borough, services, latitude: lat, longitude: lon } : null;
-  }
+  // Load CSV robustly: fetch text -> Papa.parse -> map
+  async function loadCSV(){
+    try{
+      const res = await fetch('./stations.csv', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const text = await res.text();
 
-  function loadCSV(){
-    statusEl.textContent = 'Loading stations.csv…';
-    Papa.parse('./stations.csv', {
-      download: true,
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      fastMode: false,
-      complete: (res) => {
-        const mapped = res.data.map(mapRow).filter(Boolean);
-        if (mapped.length){
-          stations = mapped;
-          countEl.textContent = String(stations.length);
-          statusEl.textContent = 'Loaded from stations.csv';
-        } else {
-          stations = FALLBACK;
-          countEl.textContent = String(stations.length);
-          statusEl.innerHTML = '<span class="notice">stations.csv parsed but no usable rows — using small fallback set.</span>';
-        }
-      },
-      error: (err) => {
-        stations = FALLBACK;
-        countEl.textContent = String(stations.length);
-        statusEl.innerHTML = `<span class="notice">Could not load stations.csv — using small fallback set. (${err && err.message ? err.message : 'Unknown error'})</span>`;
+      const parsed = Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
+      if (parsed.errors && parsed.errors.length){
+        console.warn('Papa errors:', parsed.errors);
       }
-    });
+
+      const mapped = parsed.data.map(row => {
+        const name = normName(row);
+        const borough = normBorough(row);
+        const services = normServices(row);
+        const lat = normLat(row);
+        const lon = normLon(row);
+        if (!name || !borough) return null;
+        return { name, borough, services, latitude: lat, longitude: lon };
+      }).filter(Boolean);
+
+      if (!mapped.length) throw new Error('Parsed but found 0 usable rows (check headers).');
+
+      stations = mapped;
+      countEl.textContent = String(stations.length);
+      statusEl.textContent = 'Loaded from stations.csv';
+    }catch(err){
+      console.error('CSV load failed:', err);
+      stations = FALLBACK;
+      countEl.textContent = String(stations.length);
+      statusEl.innerHTML = `<span class="notice">Could not load stations.csv — using small fallback set. (${err.message})</span>`;
+    }
   }
 
   loadCSV();
