@@ -15,20 +15,19 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; color:var(--ink);
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0;
+      color:var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 400;
       line-height:1.55;
-      /* Geometric NYC-esque background: deep night gradient + faint grid + diagonal subway “lines” */
+      /* keep your NYC-themed background */
       background:
-        /* soft colored “city lights” blobs */
         radial-gradient(1000px 700px at 12% 8%, rgba(122,162,255,.12), transparent 60%),
         radial-gradient(900px 600px at 85% 20%, rgba(255,204,10,.10), transparent 60%),
         radial-gradient(800px 600px at 70% 85%, rgba(238,53,46,.10), transparent 60%),
-        /* diagonal subway lines */
         linear-gradient(135deg, rgba(238,53,46,.28) 1px, transparent 1px) 0 0/ 18px 18px,
         linear-gradient(135deg, rgba(0,147,60,.24) 1px, transparent 1px) 6px 0/ 18px 18px,
         linear-gradient(135deg, rgba(0,57,166,.20) 1px, transparent 1px) 12px 0/ 18px 18px,
-        /* subtle isometric grid */
         repeating-linear-gradient(0deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 24px),
         repeating-linear-gradient(90deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 24px),
         linear-gradient(180deg, var(--bg1), var(--bg2) 60%, #070d24);
