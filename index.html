@@ -84,9 +84,7 @@
     <header>
       <div>
         <h1>Random NYC Subway Stop</h1>
-        <div class="tag">Data source: NY Open Data “MTA Subway Stations &amp; Complexes” (static CSV)</div>
       </div>
-      <div class="tag">Loaded: <span id="count" class="count">0</span></div>
     </header>
 
     <section class="panel">
@@ -109,10 +107,6 @@
       <div class="result">
         <div id="result" class="card status">Click “Pick a station” to draw a stop.</div>
       </div>
-
-      <footer class="tag" style="margin-top:10px">
-        Tip: This page reads <code>stations.csv</code> from the site root. No external API calls.
-      </footer>
     </section>
   </div>
 
@@ -252,7 +246,7 @@
         const parsed=Papa.parse(text,{header:true,dynamicTyping:true,skipEmptyLines:true});
         const mapped=parsed.data.map(mapRow).filter(Boolean);
         if(!mapped.length) throw new Error('Parsed 0 usable rows (check headers).');
-        stations=mapped; countEl.textContent=String(stations.length); statusEl.textContent='Loaded from stations.csv';
+        stations=mapped; countEl.textContent=String(stations.length); statusEl.textContent='';
       }catch(err){
         stations=FALLBACK; countEl.textContent=String(stations.length);
         statusEl.innerHTML=`<span class="notice">Using small fallback set. (${err.message})</span>`;
