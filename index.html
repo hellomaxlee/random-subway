@@ -4,23 +4,18 @@
   <meta charset="utf-8" />
   <title>Random NYC Subway Stop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --ink:#e8ecff; --muted:#a9b1d6; --panel:#0c1226; --border:#1a2244; --accent:#7aa2ff;
+      --ink:#e8ecff; --muted:#a9b1d6;
+      --panel:#0c1226; --border:#1a2244; --accent:#7aa2ff;
       --bg1:#060a1a; --bg2:#0a1030;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      color:var(--ink);
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-weight: 400;
-      line-height:1.55;
-      /* keep your NYC-themed background */
+      margin:0; color:var(--ink);
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif; font-weight:400; line-height:1.55;
+      /* NYC-themed geometric night background */
       background:
         radial-gradient(1000px 700px at 12% 8%, rgba(122,162,255,.12), transparent 60%),
         radial-gradient(900px 600px at 85% 20%, rgba(255,204,10,.10), transparent 60%),
@@ -31,11 +26,12 @@
         repeating-linear-gradient(0deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 24px),
         repeating-linear-gradient(90deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 24px),
         linear-gradient(180deg, var(--bg1), var(--bg2) 60%, #070d24);
+      background-attachment: fixed;
     }
     .wrap{max-width:900px;margin:48px auto;padding:0 20px}
     header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}
-    h1{margin:0; font-weight:800; letter-spacing:.2px; font-size:1.9rem}
-    .tag{color:var(--muted); font-size:.95rem}
+    h1{margin:0;font-weight:800;letter-spacing:.2px;font-size:1.9rem}
+    .tag{color:var(--muted);font-size:.95rem}
     .panel{
       background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:18px;
       box-shadow:0 15px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
@@ -58,20 +54,29 @@
       background:rgba(12,18,38,.75); border:1px solid var(--border); border-radius:16px; padding:16px 18px;
       backdrop-filter: blur(3px);
     }
-    .name{font-size:1.35rem;font-weight:800;letter-spacing:.2px;margin:.3rem 0 .1rem}
-    .row{display:flex; gap:18px; align-items:center; flex-wrap:wrap}
-    .group{min-width:180px}
+    .row{display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap}
+    .group{min-width:260px}
     .label{color:var(--muted); font-size:.9rem}
+    .name{font-size:1.35rem;font-weight:800;letter-spacing:.2px;margin:.45rem 0 .1rem}
+    .count{color:var(--accent);font-weight:700}
+
+    /* MTA route discs */
     .lines{display:flex; gap:8px; flex-wrap:wrap}
     .dot{
-      width:28px;height:28px;border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
-      font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.35);
-      font-size:.95rem;
+      width:30px;height:30px;border-radius:50%;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight:800;font-size:16px;line-height:1;letter-spacing:0;
+      color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35);
+      border:1.25px solid rgba(0,0,0,.55); box-shadow:inset 0 0 0 .5px rgba(255,255,255,.18);
     }
-    .count{color:var(--accent);font-weight:700}
-    footer{margin-top:10px; color:var(--muted); font-size:.9rem}
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    .dot.wide{font-size:13px}
+
+    /* Bottom train animation */
+    .train-wrap{position:fixed;left:0;right:0;bottom:0;pointer-events:none;opacity:.55;
+      filter:drop-shadow(0 2px 10px rgba(0,0,0,.4));}
+    .train{width:100%;height:90px;display:block;animation:train-move 16s linear infinite}
+    @keyframes train-move{0%{transform:translateX(100%)}100%{transform:translateX(-50%)}}
   </style>
 </head>
 <body>
@@ -105,188 +110,156 @@
         <div id="result" class="card status">Click “Pick a station” to draw a stop.</div>
       </div>
 
-      <footer>
+      <footer class="tag" style="margin-top:10px">
         Tip: This page reads <code>stations.csv</code> from the site root. No external API calls.
       </footer>
     </section>
   </div>
 
+  <!-- Train animation -->
+  <div class="train-wrap" aria-hidden="true">
+    <svg class="train" viewBox="0 0 900 80" preserveAspectRatio="xMidYMid slice">
+      <rect x="0" y="62" width="900" height="4" fill="rgba(255,255,255,.15)"/>
+      <g id="car">
+        <rect x="0" y="20" rx="6" ry="6" width="120" height="38" fill="#d9dbe0" opacity="0.92" />
+        <rect x="20" y="26" width="22" height="26" fill="#bfc2c8"/>
+        <rect x="48" y="26" width="22" height="26" fill="#bfc2c8"/>
+        <rect x="76" y="26" width="36" height="26" fill="#b5bac4"/>
+        <circle cx="24" cy="64" r="6" fill="#444"/>
+        <circle cx="96" cy="64" r="6" fill="#444"/>
+      </g>
+      <g id="trainGroup">
+        <use href="#car" x="0"/>
+        <use href="#car" x="140"/>
+        <use href="#car" x="280"/>
+      </g>
+    </svg>
+  </div>
+
   <!-- Papa Parse for CSV -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+  (function(){
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const countEl  = document.getElementById('count');
+    const btn      = document.getElementById('pickBtn');
 
-<!-- Papa Parse for CSV -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-<script>
-(function(){
-  const statusEl = document.getElementById('status');
-  const resultEl = document.getElementById('result');
-  const countEl  = document.getElementById('count');
-  const btn      = document.getElementById('pickBtn');
-
-  const LINE_COLORS = {
-    '1':'#EE352E','2':'#EE352E','3':'#EE352E',
-    '4':'#00933C','5':'#00933C','6':'#00933C','6X':'#00933C',
-    '7':'#B933AD','7X':'#B933AD',
-    'A':'#0039A6','C':'#0039A6','E':'#0039A6',
-    'B':'#FF6319','D':'#FF6319','F':'#FF6319','M':'#FF6319',
-    'G':'#6CBE45','J':'#996633','Z':'#996633',
-    'L':'#A7A9AC','N':'#FCCC0A','Q':'#FCCC0A','R':'#FCCC0A','W':'#FCCC0A',
-    'S':'#808183','SIR':'#0039A6'
-  };
-
-  const FALLBACK = [
-    { name:'Times Sq - 42 St', borough:'Manhattan', services:'1 2 3 7 N Q R W S' },
-    { name:'Atlantic Av - Barclays Ctr', borough:'Brooklyn', services:'B Q 2 3 4 5 D N R' },
-    { name:'Flushing - Main St', borough:'Queens', services:'7' },
-    { name:'149 St - Grand Concourse', borough:'Bronx', services:'2 5' },
-    { name:'St George', borough:'Staten Island', services:'SIR' }
-  ];
-
-  let stations = [];
-
-  // ---- Helpers mapped to YOUR headers ----
-  const NAME_KEYS     = ['Display Name','Stop Name','Stations In Complex','Station Name','Complex Name'];
-  const BORO_KEYS     = ['Borough','Boro'];
-  const ROUTE_KEYS    = ['Daytime Routes','Services','Lines','Routes'];
-  const LAT_KEYS      = ['Latitude','GTFS Latitude','gtfs_latitude','lat','y'];
-  const LON_KEYS      = ['Longitude','GTFS Longitude','gtfs_longitude','lon','x'];
-
-  function firstKey(row, keys){
-    for (const k of keys){
-      if (k in row) return k;
-    }
-    // try loose match (case/space-insensitive)
-    const map = {};
-    for (const real of Object.keys(row)){
-      map[real.trim().toLowerCase()] = real;
-    }
-    for (const k of keys){
-      const hit = map[k.trim().toLowerCase()];
-      if (hit) return hit;
-    }
-    return null;
-  }
-
-  function mapRow(row){
-    const nk = firstKey(row, NAME_KEYS);
-    const bk = firstKey(row, BORO_KEYS);
-    if (!nk || !bk) return null;
-
-    const rk = firstKey(row, ROUTE_KEYS);
-    const latk = firstKey(row, LAT_KEYS);
-    const lonk = firstKey(row, LON_KEYS);
-
-    const rawName = row[nk];
-    const rawBoro = String(row[bk] ?? '').trim();
-
-    // Borough codes -> full names
-    let borough;
-    switch (rawBoro.toUpperCase()) {
-      case 'M': case 'MANHATTAN': borough = 'Manhattan'; break;
-      case 'B': case 'BK': case 'BROOKLYN': borough = 'Brooklyn'; break;
-      case 'Q': case 'QUEENS': borough = 'Queens'; break;
-      case 'X': case 'BX': case 'BRONX': borough = 'Bronx'; break;
-      case 'S': case 'SI': case 'STATEN ISLAND': borough = 'Staten Island'; break;
-      default: borough = rawBoro || undefined;
-    }
-
-    if (!rawName || !borough) return null;
-
-    return {
-      name: String(rawName).trim(),
-      borough,
-      services: rk ? row[rk] : '',
-      latitude: latk ? row[latk] : undefined,
-      longitude: lonk ? row[lonk] : undefined
+    // Official MTA route colors
+    const LINE_COLORS = {
+      '1':'#EE352E','2':'#EE352E','3':'#EE352E',
+      '4':'#00933C','5':'#00933C','6':'#00933C','6X':'#00933C',
+      '7':'#B933AD','7X':'#B933AD',
+      'A':'#0039A6','C':'#0039A6','E':'#0039A6',
+      'B':'#FF6319','D':'#FF6319','F':'#FF6319','M':'#FF6319',
+      'G':'#6CBE45',
+      'J':'#996633','Z':'#996633',
+      'L':'#A7A9AC',
+      'N':'#FCCC0A','Q':'#FCCC0A','R':'#FCCC0A','W':'#FCCC0A',
+      'S':'#808183','SIR':'#0039A6'
     };
-  }
 
-  function splitLines(s){
-    if (!s) return [];
-    return String(s).split(/[,\s/]+/).filter(Boolean);
-  }
+    // Tiny fallback if CSV missing
+    const FALLBACK = [
+      { name:'Times Sq - 42 St', borough:'Manhattan', services:'1 2 3 7 N Q R W S' },
+      { name:'Atlantic Av - Barclays Ctr', borough:'Brooklyn', services:'B Q 2 3 4 5 D N R' },
+      { name:'Flushing - Main St', borough:'Queens', services:'7' },
+      { name:'149 St - Grand Concourse', borough:'Bronx', services:'2 5' },
+      { name:'St George', borough:'Staten Island', services:'SIR' }
+    ];
 
-  function dotHTML(code){
-    const c = (code || '').toUpperCase();
-    const col = LINE_COLORS[c] || '#555';
-    const label = c.length <= 3 ? c : '•';
-    return `<span class="dot" style="background:${col}">${label}</span>`;
-  }
+    let stations = [];
 
-  function renderStation(s){
-    const lines = splitLines(s.services);
-    resultEl.classList.remove('status');
-    resultEl.innerHTML = `
-      <div class="row">
-        <div class="group">
-          <div class="label">Borough</div>
-          <div><strong>${s.borough}</strong></div>
-        </div>
-        <div class="group">
-          <div class="label">Lines</div>
-          <div class="lines">${lines.length ? lines.map(dotHTML).join('') : '<span class="label">—</span>'}</div>
-        </div>
-      </div>
-      <div class="name">${s.name}</div>
-    `;
-  }
+    // Header matching (handles your CSV with spaces & codes)
+    const NAME_KEYS  = ['Display Name','Stop Name','Stations In Complex','Station Name','Complex Name'];
+    const BORO_KEYS  = ['Borough','Boro'];
+    const ROUTE_KEYS = ['Daytime Routes','Services','Lines','Routes'];
+    const LAT_KEYS   = ['Latitude','GTFS Latitude','gtfs_latitude','lat','y'];
+    const LON_KEYS   = ['Longitude','GTFS Longitude','gtfs_longitude','lon','x'];
 
-  function selectedBoroughs(){
-    return [...document.querySelectorAll('input[name="borough"]:checked')].map(cb => cb.value);
-  }
-  function pickRandom(list){ return list[Math.floor(Math.random() * list.length)]; }
-  function pickAndShow(){
-    if (!stations.length) return;
-    const sel = selectedBoroughs();
-    const pool = sel.length ? stations.filter(s => sel.includes(s.borough)) : stations;
-    if (!pool.length){
-      resultEl.classList.add('status');
-      resultEl.textContent = 'No stations match your filter.';
-      return;
+    function firstKey(row, keys){
+      for (const k of keys) if (k in row) return k;
+      const map = {};
+      for (const real of Object.keys(row)) map[real.trim().toLowerCase()] = real;
+      for (const k of keys){ const hit = map[k.trim().toLowerCase()]; if (hit) return hit; }
+      return null;
     }
-    renderStation(pickRandom(pool));
-  }
-  btn.addEventListener('click', pickAndShow);
+    function mapRow(row){
+      const nk=firstKey(row,NAME_KEYS), bk=firstKey(row,BORO_KEYS);
+      if(!nk||!bk) return null;
+      const rk=firstKey(row,ROUTE_KEYS), latk=firstKey(row,LAT_KEYS), lonk=firstKey(row,LON_KEYS);
+      const rawName=row[nk]; const rawBoro=String(row[bk]??'').trim().toUpperCase();
+      let borough;
+      if(rawBoro==='M'||rawBoro==='MANHATTAN') borough='Manhattan';
+      else if(rawBoro==='B'||rawBoro==='BK'||rawBoro==='BROOKLYN') borough='Brooklyn';
+      else if(rawBoro==='Q'||rawBoro==='QUEENS') borough='Queens';
+      else if(rawBoro==='X'||rawBoro==='BX'||rawBoro==='BRONX') borough='Bronx';
+      else if(rawBoro==='S'||rawBoro==='SI'||rawBoro==='STATEN ISLAND') borough='Staten Island';
+      else borough=rawBoro||undefined;
+      if(!rawName||!borough) return null;
+      return {
+        name:String(rawName).trim(),
+        borough,
+        services: rk ? row[rk] : '',
+        latitude: latk ? row[latk] : undefined,
+        longitude: lonk ? row[lonk] : undefined
+      };
+    }
 
-  // ---- Load CSV and map rows ----
-  async function loadCSV(){
-    try{
-      const res = await fetch('./stations.csv', { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const text = await res.text();
+    function splitLines(s){ return s ? String(s).split(/[,\s/]+/).filter(Boolean) : []; }
+    function dotHTML(code){
+      const c=(code||'').toUpperCase();
+      const col=LINE_COLORS[c]||'#555';
+      const wide=(c==='SIR'||c==='6X'||c==='7X')?' wide':'';
+      return `<span class="dot${wide}" style="background:${col}">${c==='SIR'?'SIR':c}</span>`;
+    }
 
-      const parsed = Papa.parse(text, { header:true, dynamicTyping:true, skipEmptyLines:true });
-      const rows = parsed.data;
+    function renderStation(s){
+      const lines=splitLines(s.services);
+      resultEl.classList.remove('status');
+      resultEl.innerHTML=`
+        <div class="row">
+          <div class="group">
+            <div class="label">Borough</div>
+            <div><strong>${s.borough}</strong></div>
+            <div class="name">${s.name}</div>
+          </div>
+          <div class="group">
+            <div class="label">Lines</div>
+            <div class="lines">${lines.length?lines.map(dotHTML).join(''):'<span class="label">—</span>'}</div>
+          </div>
+        </div>`;
+    }
 
-      const mapped = rows.map(mapRow).filter(Boolean);
+    function selectedBoroughs(){
+      return [...document.querySelectorAll('input[name="borough"]:checked')].map(cb=>cb.value);
+    }
+    function pickRandom(list){ return list[Math.floor(Math.random()*list.length)]; }
+    function pickAndShow(){
+      if(!stations.length) return;
+      const sel=selectedBoroughs();
+      const pool=sel.length?stations.filter(s=>sel.includes(s.borough)):stations;
+      if(!pool.length){ resultEl.classList.add('status'); resultEl.textContent='No stations match your filter.'; return; }
+      renderStation(pickRandom(pool));
+    }
+    btn.addEventListener('click', pickAndShow);
 
-      if (mapped.length === 0){
-        // show quick debug so you can compare headers
-        const headers = parsed.meta && parsed.meta.fields ? parsed.meta.fields : Object.keys(rows[0] || {});
-        statusEl.innerHTML = `<span class="notice">stations.csv parsed but no usable rows — using small fallback set.</span>
-          <div class="status" style="margin-top:6px">
-            Detected headers: <code>${(headers||[]).join(' | ')}</code>
-          </div>`;
-        stations = FALLBACK;
-        countEl.textContent = String(stations.length);
-        return;
+    async function loadCSV(){
+      try{
+        const res=await fetch('./stations.csv',{cache:'no-store'});
+        if(!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        const text=await res.text();
+        const parsed=Papa.parse(text,{header:true,dynamicTyping:true,skipEmptyLines:true});
+        const mapped=parsed.data.map(mapRow).filter(Boolean);
+        if(!mapped.length) throw new Error('Parsed 0 usable rows (check headers).');
+        stations=mapped; countEl.textContent=String(stations.length); statusEl.textContent='Loaded from stations.csv';
+      }catch(err){
+        stations=FALLBACK; countEl.textContent=String(stations.length);
+        statusEl.innerHTML=`<span class="notice">Using small fallback set. (${err.message})</span>`;
       }
-
-      stations = mapped;
-      countEl.textContent = String(stations.length);
-      statusEl.textContent = 'Loaded from stations.csv';
-    }catch(err){
-      stations = FALLBACK;
-      countEl.textContent = String(stations.length);
-      statusEl.innerHTML = `<span class="notice">Could not load stations.csv — using small fallback set. (${err.message})</span>`;
     }
-  }
-
-  loadCSV();
-})();
-</script>
-
-</script>
+    loadCSV();
+  })();
+  </script>
 </body>
 </html>
