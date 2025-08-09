@@ -62,7 +62,7 @@
     <header>
       <div>
         <h1>Random NYC Subway Stop</h1>
-        <div class="tag">Data source: NY Open Data “MTA Subway Stations &amp; Complexes” (static file)</div>
+        <div class="tag">Data source: NY Open Data “MTA Subway Stations &amp; Complexes” (static CSV)</div>
       </div>
       <div class="tag">Loaded: <span id="count" class="count">0</span></div>
     </header>
@@ -89,10 +89,13 @@
       </div>
 
       <footer>
-        Tip: This page reads <code>stations.json</code> from the site root. No external API calls.
+        Tip: This page reads <code>stations.csv</code> from the site root. No external API calls.
       </footer>
     </section>
   </div>
+
+  <!-- Robust CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
 (function(){
@@ -101,10 +104,11 @@
   const countEl = document.getElementById('count');
   const btn = document.getElementById('pickBtn');
 
+  // MTA line colors
   const LINE_COLORS = {
     '1':'#EE352E','2':'#EE352E','3':'#EE352E',
     '4':'#00933C','5':'#00933C','6':'#00933C','6X':'#00933C',
-    '7':'#B933AD','7X':'B933AD',
+    '7':'#B933AD','7X':'#B933AD',
     'A':'#0039A6','C':'#0039A6','E':'#0039A6',
     'B':'#FF6319','D':'#FF6319','F':'#FF6319','M':'#FF6319',
     'G':'#6CBE45',
@@ -114,6 +118,7 @@
     'S':'#808183','SIR':'#0039A6'
   };
 
+  // tiny fallback in case CSV is missing
   const FALLBACK = [
     { complex_name: 'Times Sq - 42 St', borough: 'Manhattan', services: '1 2 3 7 N Q R W S' },
     { complex_name: 'Atlantic Av - Barclays Ctr', borough: 'Brooklyn', services: 'B Q 2 3 4 5 D N R' },
@@ -124,9 +129,42 @@
 
   let stations = [];
 
+  // Try to find a column by any of several likely names (case-insensitive)
+  function getField(row, candidates){
+    for (const key of Object.keys(row)){
+      const k = key.trim().toLowerCase();
+      for (const c of candidates){
+        if (k === c) return row[key];
+      }
+    }
+    return undefined;
+  }
+
+  function normName(row){
+    return getField(row, ['complex_name','complex','complexname']) ||
+           getField(row, ['station_name','stop_name','name','station']);
+  }
+
+  function normBorough(row){
+    return getField(row, ['borough','boro']);
+  }
+
+  function normServices(row){
+    return getField(row, ['services','lines','route','routes','transfers']);
+  }
+
+  function normLat(row){
+    return getField(row, ['latitude','lat','gtfs_latitude','y']);
+  }
+
+  function normLon(row){
+    return getField(row, ['longitude','lon','long','gtfs_longitude','x']);
+  }
+
   function splitLines(s){
-    const raw = s.services || s.lines || s.routes || s.transfers || '';
-    return Array.isArray(raw) ? raw : (typeof raw === 'string' ? raw.split(/[,\s/]+/).filter(Boolean) : []);
+    if (!s) return [];
+    if (Array.isArray(s)) return s;
+    return String(s).split(/[,\s/]+/).filter(Boolean);
   }
 
   function dotHTML(code){
@@ -137,9 +175,10 @@
   }
 
   function renderStation(s){
-    const name = s.complex_name || s.station_name || s.stop_name || s.name || 'Unknown';
+    const name = s.name || 'Unknown';
     const borough = s.borough || '—';
-    const lines = splitLines(s);
+    const lines = splitLines(s.services);
+
     resultEl.classList.remove('status');
     resultEl.innerHTML = `
       <div class="row">
@@ -176,23 +215,44 @@
 
   btn.addEventListener('click', pickAndShow);
 
-  async function loadLocal(){
-    try{
-      const res = await fetch('./stations.json', { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!Array.isArray(data) || !data.length) throw new Error('Empty or invalid JSON');
-      stations = data.filter(s => (s.complex_name || s.station_name) && s.borough);
-      countEl.textContent = String(stations.length);
-      statusEl.textContent = 'Loaded from stations.json';
-    }catch(err){
-      stations = FALLBACK;
-      countEl.textContent = String(stations.length);
-      statusEl.innerHTML = '<span class="notice">stations.json not found or invalid — using small fallback set.</span>';
-    }
+  function mapRow(row){
+    const name = normName(row);
+    const borough = normBorough(row);
+    const services = normServices(row);
+    const lat = normLat(row);
+    const lon = normLon(row);
+    return (name && borough) ? { name, borough, services, latitude: lat, longitude: lon } : null;
   }
 
-  loadLocal();
+  function loadCSV(){
+    statusEl.textContent = 'Loading stations.csv…';
+    Papa.parse('./stations.csv', {
+      download: true,
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      fastMode: false,
+      complete: (res) => {
+        const mapped = res.data.map(mapRow).filter(Boolean);
+        if (mapped.length){
+          stations = mapped;
+          countEl.textContent = String(stations.length);
+          statusEl.textContent = 'Loaded from stations.csv';
+        } else {
+          stations = FALLBACK;
+          countEl.textContent = String(stations.length);
+          statusEl.innerHTML = '<span class="notice">stations.csv parsed but no usable rows — using small fallback set.</span>';
+        }
+      },
+      error: (err) => {
+        stations = FALLBACK;
+        countEl.textContent = String(stations.length);
+        statusEl.innerHTML = `<span class="notice">Could not load stations.csv — using small fallback set. (${err && err.message ? err.message : 'Unknown error'})</span>`;
+      }
+    });
+  }
+
+  loadCSV();
 })();
 </script>
 </body>
