@@ -246,7 +246,7 @@
         const parsed=Papa.parse(text,{header:true,dynamicTyping:true,skipEmptyLines:true});
         const mapped=parsed.data.map(mapRow).filter(Boolean);
         if(!mapped.length) throw new Error('Parsed 0 usable rows (check headers).');
-        stations=mapped; countEl.textContent=String(stations.length); statusEl.textContent='';
+        stations=mapped; countEl.textContent=String(stations.length); statusEl.textContent='Adventure Awaits';
       }catch(err){
         stations=FALLBACK; countEl.textContent=String(stations.length);
         statusEl.innerHTML=`<span class="notice">Using small fallback set. (${err.message})</span>`;
