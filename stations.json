@@ -1,2 +1,0 @@
-# From anywhere; saves stations.json in your current folder
-curl 'https://data.ny.gov/resource/5f5g-n3cz.json?$select=complex_name,station_name,borough,services,latitude,longitude&$limit=5000' -o stations.json
