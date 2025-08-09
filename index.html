@@ -4,57 +4,65 @@
   <meta charset="utf-8" />
   <title>Random NYC Subway Stop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0b1020; --card:#11162a; --muted:#aab1c7; --text:#e7ecf7; --accent:#7aa2ff; --border:#222a45;
+      --bg:#fafbfe; --ink:#0f1222; --muted:#6a7086; --card:#ffffff; --border:#e6e9f2; --accent:#2b59ff;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      margin:0; background:linear-gradient(180deg,#0a0f1f, #0f1630 40%, #0a1025);
-      color:var(--text); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height:1.55;
     }
-    .wrap{max-width:820px;margin:48px auto;padding:0 20px}
-    header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
-    h1{margin:0;font-weight:800;letter-spacing:.2px}
-    .tag{color:var(--muted);font-size:.95rem}
+    .wrap{max-width:880px;margin:48px auto;padding:0 20px}
+    header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}
+    h1{margin:0; font-weight:800; letter-spacing:.2px; font-size:1.8rem}
+    .tag{color:var(--muted); font-size:.95rem}
     .panel{
       background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+      box-shadow:0 8px 30px rgba(23,27,59,.06);
     }
     fieldset{border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin:0}
     legend{font-size:.9rem;color:var(--muted); padding:0 .4rem}
-    .boroughs{display:flex; gap:14px; flex-wrap:wrap; padding:6px 2px}
+    .boroughs{display:flex; gap:16px; flex-wrap:wrap; padding:6px 2px}
     label{display:inline-flex; gap:.5rem; align-items:center; cursor:pointer; user-select:none}
     input[type="checkbox"]{width:18px;height:18px}
     .controls{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:14px}
     button{
       font-weight:700; padding:.7rem 1.1rem; border-radius:12px; border:1px solid var(--border);
-      background:linear-gradient(180deg,#1b2350,#17204a); color:#fff; cursor:pointer;
+      background:linear-gradient(180deg,#f4f6ff,#e8edff); color:#0b1a64; cursor:pointer;
     }
-    button:hover{filter:brightness(1.07)}
+    button:hover{filter:brightness(1.02)}
+    .status{color:var(--muted)}
+    .notice{color:#c41e3a; font-weight:600}
     .result{margin-top:18px}
     .card{
       background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 18px;
     }
-    .muted{color:var(--muted)}
-    .name{font-size:1.4rem;font-weight:800;letter-spacing:.2px;margin:.3rem 0}
+    .name{font-size:1.35rem;font-weight:800;letter-spacing:.2px;margin:.3rem 0 .1rem}
     .row{display:flex; gap:18px; align-items:center; flex-wrap:wrap}
+    .group{min-width:180px}
+    .label{color:var(--muted); font-size:.9rem}
     .lines{display:flex; gap:8px; flex-wrap:wrap}
     .dot{
       width:28px;height:28px;border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
-      font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.4); border:1px solid rgba(0,0,0,.35);
+      font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35); border:1px solid rgba(0,0,0,.15);
+      font-size:.95rem;
     }
-    .footer{margin-top:14px;color:var(--muted);font-size:.9rem}
     .count{color:var(--accent);font-weight:700}
-    .error{color:#ff8e8e}
+    footer{margin-top:10px; color:var(--muted); font-size:.9rem}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div>
-        <h1>🎲 Random NYC Subway Stop</h1>
-        <div class="tag">NY Open Data “MTA Subway Stations &amp; Complexes”</div>
+        <h1>Random NYC Subway Stop</h1>
+        <div class="tag">Data source: NY Open Data “MTA Subway Stations &amp; Complexes” (static file)</div>
       </div>
       <div class="tag">Loaded: <span id="count" class="count">0</span></div>
     </header>
@@ -70,39 +78,33 @@
           <label><input type="checkbox" name="borough" value="Staten Island" checked>Staten Island</label>
         </div>
       </fieldset>
+
       <div class="controls">
         <button id="pickBtn">Pick a station</button>
-        <div id="status" class="muted">Loading stations…</div>
+        <div id="status" class="status">Loading stations…</div>
       </div>
+
       <div class="result">
-        <div id="result" class="card muted">Click “Pick a station” to draw a stop.</div>
+        <div id="result" class="card status">Click “Pick a station” to draw a stop.</div>
       </div>
-      <div class="footer">
-        Tip: Add a <code>stations.json</code> file to this repo for a fully static, super-fast site.
-      </div>
+
+      <footer>
+        Tip: This page reads <code>stations.json</code> from the site root. No external API calls.
+      </footer>
     </section>
   </div>
 
 <script>
-(async function(){
-  // ---------- CONFIG ----------
-  const LOCAL_JSON = './stations.json'; // optional: drop a file with that name into the repo
-  const SOCRATA_URL = 'https://data.ny.gov/resource/5f5g-n3cz.json';
-  const SELECT = 'complex_name,station_name,borough,services,latitude,longitude';
-  const LIMIT = 5000;
-  const APP_TOKEN = ''; // paste your Socrata App Token here (optional but recommended)
-  // ----------------------------
-
+(function(){
   const statusEl = document.getElementById('status');
   const resultEl = document.getElementById('result');
   const countEl = document.getElementById('count');
   const btn = document.getElementById('pickBtn');
 
-  // MTA line colors
   const LINE_COLORS = {
     '1':'#EE352E','2':'#EE352E','3':'#EE352E',
     '4':'#00933C','5':'#00933C','6':'#00933C','6X':'#00933C',
-    '7':'#B933AD','7X':'#B933AD',
+    '7':'#B933AD','7X':'B933AD',
     'A':'#0039A6','C':'#0039A6','E':'#0039A6',
     'B':'#FF6319','D':'#FF6319','F':'#FF6319','M':'#FF6319',
     'G':'#6CBE45',
@@ -113,42 +115,41 @@
   };
 
   const FALLBACK = [
-    { complex_name: 'Times Sq - 42 St', borough: 'Manhattan', services: '1 2 3 7 N Q R W S', latitude: 40.7553, longitude: -73.9871 },
-    { complex_name: 'Atlantic Av - Barclays Ctr', borough: 'Brooklyn', services: 'B Q 2 3 4 5 D N R', latitude: 40.6844, longitude: -73.9780 },
-    { complex_name: 'Flushing - Main St', borough: 'Queens', services: '7', latitude: 40.7597, longitude: -73.8300 },
-    { complex_name: '149 St - Grand Concourse', borough: 'Bronx', services: '2 5', latitude: 40.8184, longitude: -73.9278 },
-    { complex_name: 'St George', borough: 'Staten Island', services: 'SIR', latitude: 40.6437, longitude: -74.0732 }
+    { complex_name: 'Times Sq - 42 St', borough: 'Manhattan', services: '1 2 3 7 N Q R W S' },
+    { complex_name: 'Atlantic Av - Barclays Ctr', borough: 'Brooklyn', services: 'B Q 2 3 4 5 D N R' },
+    { complex_name: 'Flushing - Main St', borough: 'Queens', services: '7' },
+    { complex_name: '149 St - Grand Concourse', borough: 'Bronx', services: '2 5' },
+    { complex_name: 'St George', borough: 'Staten Island', services: 'SIR' }
   ];
 
   let stations = [];
 
   function splitLines(s){
-    const raw = s.services || s.lines || s.transfers || s.routes || '';
+    const raw = s.services || s.lines || s.routes || s.transfers || '';
     return Array.isArray(raw) ? raw : (typeof raw === 'string' ? raw.split(/[,\s/]+/).filter(Boolean) : []);
   }
 
   function dotHTML(code){
     const c = (code || '').toUpperCase();
     const col = LINE_COLORS[c] || '#555';
-    // Keep 1-character labels centered; render 'SIR' as text
-    const label = c.length <= 2 ? c : '•';
+    const label = c.length <= 3 ? c : '•';
     return `<span class="dot" style="background:${col}">${label}</span>`;
   }
 
   function renderStation(s){
-    const name = s.complex_name || s.station_name || s.name || 'Unknown';
+    const name = s.complex_name || s.station_name || s.stop_name || s.name || 'Unknown';
     const borough = s.borough || '—';
     const lines = splitLines(s);
-
+    resultEl.classList.remove('status');
     resultEl.innerHTML = `
       <div class="row">
-        <div>
-          <div class="muted">Borough</div>
+        <div class="group">
+          <div class="label">Borough</div>
           <div><strong>${borough}</strong></div>
         </div>
-        <div>
-          <div class="muted">Lines</div>
-          <div class="lines">${lines.length ? lines.map(dotHTML).join('') : '<span class="muted">—</span>'}</div>
+        <div class="group">
+          <div class="label">Lines</div>
+          <div class="lines">${lines.length ? lines.map(dotHTML).join('') : '<span class="label">—</span>'}</div>
         </div>
       </div>
       <div class="name">${name}</div>
@@ -166,61 +167,32 @@
     const sel = selectedBoroughs();
     const pool = sel.length ? stations.filter(s => sel.includes(s.borough)) : stations;
     if (!pool.length){
-      resultEl.innerHTML = `<span class="error">No stations match your filter.</span>`;
+      resultEl.classList.add('status');
+      resultEl.textContent = 'No stations match your filter.';
       return;
     }
     renderStation(pickRandom(pool));
   }
+
   btn.addEventListener('click', pickAndShow);
 
-  async function fetchWithTimeout(url, opts={}, ms=9000){
-    const ctrl = new AbortController();
-    const id = setTimeout(() => ctrl.abort(), ms);
-    try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
-    finally { clearTimeout(id); }
-  }
-
-  // Load order: local stations.json → Socrata API → fallback
-  statusEl.textContent = 'Loading stations…';
-  try {
-    // 1) Local file (if present)
-    const localRes = await fetchWithTimeout(LOCAL_JSON, {}, 2500);
-    if (localRes.ok){
-      const local = await localRes.json();
-      if (Array.isArray(local) && local.length){
-        stations = local;
-        statusEl.textContent = 'Loaded from stations.json';
-      }
-    }
-  } catch(_) { /* ignore */ }
-
-  if (!stations.length){
-    try {
-      // 2) Live API
-      const qs = new URLSearchParams({
-        '$select': SELECT,
-        '$limit': String(LIMIT),
-      });
-      if (APP_TOKEN) qs.set('$$app_token', APP_TOKEN); // query param token
-      const url = `${SOCRATA_URL}?${qs.toString()}`;
-      const headers = APP_TOKEN ? { 'X-App-Token': APP_TOKEN } : {};
-      const res = await fetchWithTimeout(url, { headers }, 9000);
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  async function loadLocal(){
+    try{
+      const res = await fetch('./stations.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      if (!Array.isArray(data) || !data.length) throw new Error('Empty or invalid JSON');
       stations = data.filter(s => (s.complex_name || s.station_name) && s.borough);
-      statusEl.textContent = `Loaded ${stations.length} stations from API`;
-    } catch(e){
-      console.error('API fetch failed:', e);
+      countEl.textContent = String(stations.length);
+      statusEl.textContent = 'Loaded from stations.json';
+    }catch(err){
+      stations = FALLBACK;
+      countEl.textContent = String(stations.length);
+      statusEl.innerHTML = '<span class="notice">stations.json not found or invalid — using small fallback set.</span>';
     }
   }
 
-  if (!stations.length){
-    // 3) Fallback
-    stations = FALLBACK;
-    statusEl.innerHTML = `<span class="error">Using small fallback set (add an App Token or stations.json)</span>`;
-  }
-
-  countEl.textContent = String(stations.length);
+  loadLocal();
 })();
 </script>
 </body>
